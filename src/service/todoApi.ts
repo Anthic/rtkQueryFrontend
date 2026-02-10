@@ -27,11 +27,23 @@ export const todoApi = createApi({
 
     //post todos
     createTodos: builder.mutation<ApiResponse<ITodo>, CreatedTodoDTO>({
-      query: (body) => ({
-        url: "/",
-        method: "POST",
-        body,
-      }),
+      query: (body) => {
+        if (body.image) {
+          const formData = new FormData();
+          formData.append("title", body.title);
+          formData.append("image", body.image);
+          return {
+            url: "/",
+            method: "POST",
+            body: formData,
+          };
+        }
+        return {
+          url: "/",
+          method: "POST",
+          body: { title: body.title },
+        };
+      },
       invalidatesTags: ["Todo"],
     }),
 
@@ -40,11 +52,26 @@ export const todoApi = createApi({
       ApiResponse<ITodo>,
       { id: number; data: UpdatedTodoDTO }
     >({
-      query: ({ id, data }) => ({
-        url: `/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
+      query: ({ id, data }) => {
+        if (data.image) {
+          const formData = new FormData();
+          if (data.title) formData.append("title", data.title);
+          if (data.completed !== undefined) {
+            formData.append("completed", String(data.completed));
+          }
+          formData.append("image", data.image);
+          return {
+            url: `/${id}`,
+            method: "PATCH",
+            body: formData,
+          };
+        }
+        return {
+          url: `/${id}`,
+          method: "PATCH",
+          body: data,
+        };
+      },
       invalidatesTags: ["Todo"],
     }),
     // delete todos
@@ -53,6 +80,24 @@ export const todoApi = createApi({
         url: `/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: ["Todo"],
+    }),
+
+    //separate endpoint for inline image upload (row - level upload)
+    uploadTodoImage: builder.mutation<
+      ApiResponse<ITodo>,
+      { id: number; file: File }
+    >({
+      query: ({ id, file }) => {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        return {
+          url: `/${id}`,
+          method: "PATCH",
+          body: formData,
+        };
+      },
       invalidatesTags: ["Todo"],
     }),
 
@@ -73,5 +118,6 @@ export const {
   useDeleteTodoMutation,
   useGetTodosByIdQuery,
   useUpdateTodoMutation,
+  useUploadTodoImageMutation,
   useToggleTodoMutation,
 } = todoApi;
