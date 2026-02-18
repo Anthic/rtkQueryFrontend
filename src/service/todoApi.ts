@@ -10,6 +10,7 @@ export const todoApi = createApi({
   reducerPath: "todoApi",
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE_URL,
+    credentials: "include",
   }),
   tagTypes: ["Todo"],
   endpoints: (builder) => ({
